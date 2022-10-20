@@ -1,0 +1,34 @@
+#!/bin/bash
+sudo apt update -y
+sudo hostname nginx
+sudo su - ubuntu
+sudo apt install git -y
+sudo apt install nginx -y
+sudo su -
+sudo touch /etc/nginx/sites-available/loadbalancer
+cat << EOT >> /etc/nginx/sites-available/loadbalancer
+upstream tom-app {
+      server 34.217.0.236:8080;
+      server 52.88.30.147:8080;
+      server 35.90.7.235:8080;
+   }
+
+   # This server accepts all traffic to port 80 and passes it to the upstream.
+   # Notice that the upstream name and the proxy_pass need to match.
+
+   server {
+      listen 80;
+
+      location / {
+          proxy_pass http://tom-app;
+      }
+ }
+EOT
+
+sudo rm -rf /etc/nginx/sites-enabled/default
+
+sudo ln -s /etc/nginx/sites-available/loadbalancer /etc/nginx/sites-enabled/loadbalancer
+
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+sudo systemctl status nginx
